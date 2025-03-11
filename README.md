@@ -47,10 +47,16 @@ splendid-cards/
 python3 src/main.py
 
 # Run simulation with specific agents
-python3 src/main.py --agents random greedy mcts
+python3 src/main.py --agents random greedy value
 
-# Generate performance report
-python3 src/main.py --agents all --games 1000 --report
+# Run with a specific number of rounds (useful for comparing strategies)
+python3 src/main.py --rounds 30
+
+# Run in single-player time trial mode
+python3 src/main.py --single-player --agents value
+
+# Compare all agent types in single-player mode
+python3 src/main.py --single-player --compare-all --seed 123
 ```
 
 ## Agent Types
@@ -63,7 +69,7 @@ Use these names with the `--agents` parameter to specify which agents to use in 
 
 - **Random** (`random`): Makes random decisions from available legal moves. If any cards can be purchased immediately, it randomly selects one to buy. Otherwise, it takes 3 tokens of randomly selected colors (never GOLD tokens). When eligible for tiles, it randomly selects one of the available qualifying tiles.
 
-- **Value-Based** (`value`): Evaluates moves based on a heuristic value function. (Not yet implemented)
+- **Value-Based** (`value`): Evaluates moves based on a heuristic value function. This agent computes a value score for each possible action (buying cards, reserving cards, collecting tokens) and selects the highest-valued action. It prioritizes cards that help complete tile requirements and collects tokens needed for reserved cards.
 
 - **MCTS** (`mcts`): Uses Monte Carlo Tree Search to look ahead. (Not yet implemented)
 
@@ -82,6 +88,60 @@ python3 src/main.py --agents greedy stingy greedy stingy
 # For a 2-player game with specific agents
 python3 src/main.py --players 2 --agents greedy stingy
 ```
+
+## Single-Player Time Trial Mode
+
+Splendid Cards now supports a single-player mode where agents try to reach 15 points as quickly as possible. This is ideal for benchmarking different agent strategies in isolation.
+
+### Usage
+
+```bash
+# Run a single agent in time trial mode
+python3 src/main.py --single-player --agents value
+
+# Compare all agent types in a single run
+python3 src/main.py --single-player --compare-all --seed 123
+
+# Set a maximum round limit
+python3 src/main.py --single-player --compare-all --rounds 50
+```
+
+### Features
+
+- Each agent starts with a fresh game state (identical setup when using the same seed)
+- In single-player mode, each turn counts as a round
+- The game ends when the agent reaches 15 points or hits the round limit
+- When comparing all agents, a performance table is displayed showing:
+  - Points achieved by each agent
+  - Number of rounds taken to reach 15 points (or DNF if unable to reach it)
+
+## Benchmark Mode
+
+The benchmark mode allows you to evaluate an agent's performance across multiple seeds, providing detailed statistical analysis.
+
+### Usage
+
+```bash
+# Run benchmark with default settings (agent tested on seeds 0-99)
+python3 src/main.py --benchmark --agents value
+
+# Specify a different range of seeds
+python3 src/main.py --benchmark --agents greedy --min-seed 100 --max-seed 199
+
+# Set a maximum round limit 
+python3 src/main.py --benchmark --agents value --rounds 50 --min-seed 0 --max-seed 19
+```
+
+### Features
+
+- Tests a single agent against multiple seeds (default: seeds 0-99)
+- Provides comprehensive statistical analysis:
+  - Success rate (percentage of seeds where agent reached 15+ points)
+  - Best and worst performing seeds
+  - Average, median, and standard deviation of rounds to 15 points
+  - Detailed listing of top 5 best and worst seeds
+- Progress indicators show completion percentage during longer benchmark runs
+
 - **Custom**: Define your own agent strategies
 
 ## Development
