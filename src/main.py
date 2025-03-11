@@ -180,17 +180,29 @@ def print_game_state(game_state, current_player=None, verbose=False):
             for card_idx in player.reserved_cards:
                 _print_card_details(game_state, card_idx, verbose)
         
-        # Print owned cards by color with colors
-        card_parts = []
-        for color, cards in player.cards.items():
-            if cards:
-                color_code = Colors.get_color_code(color)
-                card_parts.append(f"{color_code}{color.name}{Colors.RESET}:{len(cards)}")
-        
-        if card_parts:
-            print(f"Cards: {', '.join(card_parts)}")
+        # Print owned cards using the compact format
+        print(Colors.UNDERLINE + "Owned cards:" + Colors.RESET)
+        if any(cards for cards in player.cards.values()):
+            # Group cards by color for better organization
+            for color in Color:
+                if color == Color.GOLD:  # Skip gold as it's not a card color
+                    continue
+                    
+                cards = player.cards.get(color, [])
+                if cards:
+                    color_code = Colors.get_color_code(color)
+                    print(f"  {color_code}{color.name}{Colors.RESET}:")
+                    
+                    # Display each card in the compact format
+                    card_displays = []
+                    for card_idx in cards:
+                        card_displays.append(_format_card_compact(game_state, card_idx))
+                    
+                    # Print all cards for this color on one line
+                    if card_displays:
+                        print("    " + "  ".join(card_displays))
         else:
-            print("Cards: None")
+            print("  None")
         
         # Print total prestige points in bold
         prestige_points = game_state.calculate_player_points(idx)
