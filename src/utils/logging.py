@@ -34,14 +34,26 @@ class GameLogger:
         
         # Override the built-in print function
         import builtins
+        import re
+        
+        # Regular expression to match ANSI escape codes
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
         
         def custom_print(*args, **kwargs):
             # Call the original print function
             self.original_print(*args, **kwargs)
             
-            # Also write to the log file
+            # Also write to the log file, but remove ANSI color codes
             if 'file' not in kwargs:  # Only log what's printed to stdout
-                print(*args, file=self.log_file, **{k: v for k, v in kwargs.items() if k != 'flush'})
+                # Convert args to strings and strip ANSI codes
+                clean_args = []
+                for arg in args:
+                    if isinstance(arg, str):
+                        clean_args.append(ansi_escape.sub('', arg))
+                    else:
+                        clean_args.append(arg)
+                
+                print(*clean_args, file=self.log_file, **{k: v for k, v in kwargs.items() if k != 'flush'})
                 self.log_file.flush()  # Ensure it's written immediately
         
         builtins.print = custom_print
