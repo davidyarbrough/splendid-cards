@@ -12,7 +12,7 @@ In this *jewel* of a tableau-building game, players:
 
 - Collect tokens of five different colors (white, blue, black, red, and green)
 - Purchase development cards using these tokens
-- Earn prestige points from cards and noble tiles
+- Earn prestige points from cards and tiles
 - Build an economic engine through card discounts
 - Race to be the first to reach 15 prestige points
 
@@ -75,10 +75,6 @@ python src/main.py --agents all --games 1000 --report
 3. Commit your changes (`git commit -m 'Add new agent strategy'`)
 4. Push to the branch (`git push origin feature/amazing-strategy`)
 5. Open a Pull Request
-
-## License
-
-[MIT License](LICENSE)
 
 ## Acknowledgements
 

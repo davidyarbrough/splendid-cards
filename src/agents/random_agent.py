@@ -1,0 +1,1 @@
+# random agent will always buy a random card that still gives points. if there are none, it will buy a random card. If it cannot buy a card, it will get tokens toward buying a random card.

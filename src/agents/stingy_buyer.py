@@ -1,0 +1,2 @@
+# stingy buyer will always buy the cheapest card that still gives points. if there are none, it will buy the cheapest card.
+#  if there are still none, it will gain tokens toward buying the cheapest card.
