@@ -1,8 +1,9 @@
 import random
 from enum import Enum
 import time
-import sys
-from src.common import Color, Token, Card, Tile, CardCost, shuffleDecks, shuffleTiles
+import csv
+import os
+from src.common import Color, shuffleDecks, shuffleTiles
 
 class GameState:
     def __init__(self, players=4, seed=None):
@@ -20,6 +21,9 @@ class GameState:
         from src.models.player import Player
         for i in range(self.num_players):
             self.players.append(Player(f"Player-{i+1}"))
+        
+        # Load card data from CSV
+        self.card_data = self.load_card_data()
         
         # Initialize and shuffle decks using the seeded RNG
         self.level1_deck, self.level2_deck, self.level3_deck = shuffleDecks(seed)
@@ -43,6 +47,52 @@ class GameState:
         
         # Initialize and select tiles
         self.available_tiles = self.initialize_tiles()
+        
+    def load_card_data(self):
+        """Load card data from the CSV file."""
+        card_data = {}
+        project_root = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        csv_path = os.path.join(project_root, 'data', 'cards.csv')
+        
+        try:
+            with open(csv_path, 'r') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    card_id = int(row['index'])
+                    card_data[card_id] = {
+                        'level': int(row['deck']),
+                        'color': row['color'],
+                        'costs': {
+                            Color.WHITE: int(row['wht']),
+                            Color.BLUE: int(row['blu']),
+                            Color.GREEN: int(row['grn']),
+                            Color.RED: int(row['red']),
+                            Color.BLACK: int(row['blk'])
+                        },
+                        'points': int(row['points'])
+                    }
+        except Exception as e:
+            print(f"Error loading card data: {e}")
+            # Provide a minimal fallback for testing
+            print("Using fallback card data")
+            for i in range(1, 91):
+                level = 1 if i <= 40 else (2 if i <= 70 else 3)
+                color_map = {0: 'wht', 1: 'blu', 2: 'grn', 3: 'red', 4: 'blk'}
+                color = color_map[i % 5]
+                card_data[i] = {
+                    'level': level,
+                    'color': color,
+                    'costs': {
+                        Color.WHITE: (i % 5) if level == 1 else ((i % 6) if level == 2 else (i % 7)),
+                        Color.BLUE: (i % 4) if level == 1 else ((i % 5) if level == 2 else (i % 6)),
+                        Color.GREEN: (i % 3) if level == 1 else ((i % 4) if level == 2 else (i % 5)),
+                        Color.RED: (i % 2) if level == 1 else ((i % 3) if level == 2 else (i % 4)),
+                        Color.BLACK: (i % 1) if level == 1 else ((i % 2) if level == 2 else (i % 3))
+                    },
+                    'points': min(level * 2, (i % 5) + level)
+                }
+                
+        return card_data
     
     def initialize_tokens(self):
         """Initialize the token pool based on the number of players."""
@@ -137,23 +187,12 @@ class GameState:
         Returns:
             Dictionary of {Color: cost} representing the card's cost
         """
-        # This is a placeholder implementation
-        # In a real implementation, this would look up the card's cost from cards.csv
-        costs = {}
-        for color in Color:
-            if color != Color.GOLD:  # Gold is not a cost color
-                costs[color] = 0
-        
-        # Simple placeholder logic - more expensive cards for higher indices
-        main_color = list(Color)[card_idx % 5]  # Cycle through colors
-        if main_color != Color.GOLD:  # Skip GOLD color for costs
-            costs[main_color] = (card_idx % 5) + 1  # 1-5 of the main color
-        
-        secondary_color = list(Color)[(card_idx + 2) % 5]
-        if secondary_color != Color.GOLD:  # Skip GOLD color for costs
-            costs[secondary_color] = (card_idx % 3)  # 0-2 of a secondary color
-        
-        return costs
+        if card_idx in self.card_data:
+            return self.card_data[card_idx]['costs']
+        else:
+            print(f"Warning: Card {card_idx} not found in card data! Using default cost.")
+            # Return a default cost as fallback
+            return {color: 0 for color in Color if color != Color.GOLD}
     
     def get_card_color(self, card_idx):
         """Get the color of a card by its index.
@@ -164,10 +203,21 @@ class GameState:
         Returns:
             Color enum representing the card's color
         """
-        # This is a placeholder implementation
-        # In a real implementation, this would look up the card's color from cards.csv
-        colors = [color for color in Color if color != Color.GOLD]  # Cards can't be GOLD colored
-        return colors[card_idx % len(colors)]
+        if card_idx in self.card_data:
+            color_str = self.card_data[card_idx]['color']
+            # Map color string to Color enum
+            color_map = {
+                'wht': Color.WHITE,
+                'blu': Color.BLUE,
+                'grn': Color.GREEN,
+                'red': Color.RED,
+                'blk': Color.BLACK
+            }
+            return color_map.get(color_str, Color.BLACK)  # Default to BLACK if not found
+        else:
+            print(f"Warning: Card {card_idx} not found in card data! Using default color.")
+            # Return a default color as fallback
+            return Color.BLACK
     
     def get_card_points(self, card_idx):
         """Get the prestige points of a card by its index.
@@ -178,9 +228,12 @@ class GameState:
         Returns:
             Integer representing the card's prestige points
         """
-        # This is a placeholder implementation
-        # In a real implementation, this would look up the card's points from cards.csv
-        return (card_idx % 5)  # 0-4 points
+        if card_idx in self.card_data:
+            return self.card_data[card_idx]['points']
+        else:
+            print(f"Warning: Card {card_idx} not found in card data! Using default points.")
+            # Return default points as fallback
+            return 0
     
     def get_tile_points(self, tile_idx):
         """Get the prestige points of a tile by its index.
@@ -324,10 +377,20 @@ class GameState:
             print(f"Invalid token selection: must take 1-3 tokens of different colors")
             return False
         
-        # Check for duplicate colors
+        # Check for duplicate colors - with special case for 2 of the same color
         if len(colors) != len(set(colors)):
-            print(f"Invalid token selection: must take tokens of different colors")
-            return False
+            # Special case: Allow taking 2 of the same color if there are 4+ available
+            if len(colors) == 2 and colors[0] == colors[1]:
+                color = colors[0]
+                if self.tokens.get(color, 0) >= 4:
+                    # This is a valid move - taking 2 of the same color
+                    pass
+                else:
+                    print(f"Invalid token selection: cannot take 2 {color.name} tokens when fewer than 4 are available")
+                    return False
+            else:
+                print(f"Invalid token selection: must take tokens of different colors")
+                return False
         
         # Check if these tokens are available
         for color in colors:
