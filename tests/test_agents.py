@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.agents.agent import Agent
 from src.agents.greedy_buyer import GreedyBuyer
-# RandomAgent is not yet implemented
+from src.agents.random_buyer import RandomBuyer
 from src.agents.stingy_buyer import StingyBuyer
 from src.utils.common import Color
 
@@ -76,7 +76,74 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(action["action"], "buy")
         self.assertEqual(action["card_index"], 102)
     
-    # Note: RandomAgent test removed as this class is not yet implemented
+    def test_random_buyer_agent(self):
+        """Test the RandomBuyer agent implementation."""
+        # Create a mock game state
+        game_state = MagicMock()
+        
+        # Set up a mock player
+        player = MagicMock()
+        player.tokens = {
+            Color.WHITE: 3,
+            Color.BLUE: 2,
+            Color.BLACK: 1,
+            Color.RED: 0,
+            Color.GREEN: 0,
+            Color.GOLD: 0
+        }
+        player.reserved_cards = []  # No reserved cards
+        player.get_discount = lambda color: 0  # No discounts
+        game_state.players = [player]
+        
+        # Mock cards in the rivers
+        game_state.card_rivers = [
+            [101, 102],  # Level 1 river
+            [203],       # Level 2 river
+            [304, 305]   # Level 3 river
+        ]
+        
+        # Create mock cards with different costs
+        # Some are affordable, some are not
+        mock_cards = {
+            101: {'white_cost': 1, 'blue_cost': 1, 'black_cost': 0, 'red_cost': 0, 'green_cost': 0, 'points': 1},
+            102: {'white_cost': 5, 'blue_cost': 0, 'black_cost': 0, 'red_cost': 0, 'green_cost': 0, 'points': 2},
+            203: {'white_cost': 2, 'blue_cost': 2, 'black_cost': 0, 'red_cost': 0, 'green_cost': 0, 'points': 3},
+            304: {'white_cost': 3, 'blue_cost': 3, 'black_cost': 0, 'red_cost': 0, 'green_cost': 0, 'points': 4},
+            305: {'white_cost': 1, 'blue_cost': 1, 'black_cost': 1, 'red_cost': 1, 'green_cost': 1, 'points': 5}
+        }
+        game_state.cards = mock_cards
+        
+        # Set up token pool with available colors
+        game_state.token_pool = {
+            Color.WHITE: 4,
+            Color.BLUE: 4,
+            Color.BLACK: 4,
+            Color.RED: 4,
+            Color.GREEN: 4,
+            Color.GOLD: 5
+        }
+        
+        # Create the RandomBuyer agent
+        agent = RandomBuyer("TestRandomBuyer")
+        
+        # Since the agent makes random choices, we can't test the exact card or tokens it chooses
+        # But we can test that it returns a valid action
+        action = agent.take_turn(game_state, 0)
+        
+        # The agent should either buy a card or take tokens
+        self.assertIn(action["action"], ["buy", "take_tokens"])
+        
+        # If the action is to buy a card, it should be one of the affordable ones
+        if action["action"] == "buy":
+            affordable_cards = [101, 203]  # Based on the mock cards and player tokens
+            self.assertIn(action["card_index"], affordable_cards)
+        
+        # If the action is to take tokens, it should take exactly 3 colors
+        # (or fewer if less than 3 are available)
+        elif action["action"] == "take_tokens":
+            self.assertLessEqual(len(action["colors"]), 3)
+            for color in action["colors"]:
+                self.assertIn(color, [Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN])
     
     def test_stingy_buyer_agent(self):
         """Test the StingyBuyer agent implementation."""

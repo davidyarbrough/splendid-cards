@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from src.models.gamestate import GameState
 from src.agents.greedy_buyer import GreedyBuyer
+from src.agents.random_buyer import RandomBuyer
 from src.agents.stingy_buyer import StingyBuyer
 from src.utils.common import Color
 
@@ -25,7 +26,7 @@ def main():
     parser.add_argument("--players", type=int, default=4, choices=[2, 3, 4],
                         help="Number of players in the game (2-4)")
     parser.add_argument("--agents", type=str, nargs="*", default=["greedy"],
-                        help="Agent types to use (greedy, stingy)")
+                        help="Agent types to use (greedy, random, stingy)")
     parser.add_argument("--seed", type=int, default=None,
                         help="Random seed for reproducible games")
     parser.add_argument("--verbose", action="store_true",
@@ -45,6 +46,7 @@ def main():
     # Map agent type names to agent classes
     agent_types = {
         "greedy": GreedyBuyer,
+        "random": RandomBuyer,
         "stingy": StingyBuyer,
     }
     

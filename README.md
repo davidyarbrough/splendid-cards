@@ -43,13 +43,13 @@ splendid-cards/
 
 ```bash
 # Run a basic simulation
-python src/main.py
+python3 src/main.py
 
 # Run simulation with specific agents
-python src/main.py --agents random greedy mcts
+python3 src/main.py --agents random greedy mcts
 
 # Generate performance report
-python src/main.py --agents all --games 1000 --report
+python3 src/main.py --agents all --games 1000 --report
 ```
 
 ## Agent Types
@@ -60,7 +60,7 @@ Use these names with the `--agents` parameter to specify which agents to use in 
 
 - **Stingy** (`stingy`): Buys the cheapest card it can afford. This agent prioritizes cards with the lowest total cost, breaking ties by preferring cards with more diverse color requirements and higher points.
 
-- **Random** (`random`): Makes legal moves at random. (Not yet implemented)
+- **Random** (`random`): Makes random decisions from available legal moves. If any cards can be purchased immediately, it randomly selects one to buy. Otherwise, it takes 3 tokens of randomly selected colors (never GOLD tokens).
 
 - **Value-Based** (`value`): Evaluates moves based on a heuristic value function. (Not yet implemented)
 
@@ -70,16 +70,16 @@ Use these names with the `--agents` parameter to specify which agents to use in 
 
 ```bash
 # Use all GreedyBuyer agents
-python src/main.py --agents greedy
+python3 src/main.py --agents greedy
 
 # Use all StingyBuyer agents
-python src/main.py --agents stingy
+python3 src/main.py --agents stingy
 
 # Specify different agents for each player (in a 4-player game)
-python src/main.py --agents greedy stingy greedy stingy
+python3 src/main.py --agents greedy stingy greedy stingy
 
 # For a 2-player game with specific agents
-python src/main.py --players 2 --agents greedy stingy
+python3 src/main.py --players 2 --agents greedy stingy
 ```
 - **Custom**: Define your own agent strategies
 
