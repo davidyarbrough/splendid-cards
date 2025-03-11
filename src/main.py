@@ -266,8 +266,8 @@ def _format_card_compact(game_state, card_idx):
         Color.BLACK: "B"
     }
     
-    # Format the card header with ID, color and points
-    card_header = f"| {card_idx} {color_code}{color_abbr[card_color]}{Colors.RESET} {Colors.BOLD}{card_points}{Colors.RESET} |"
+    # Format the card header with ID, color and points (padded to ensure alignment)
+    card_header = f"| {card_idx:2d} {color_code}{color_abbr[card_color]}{Colors.RESET} {Colors.BOLD}{card_points}{Colors.RESET} |"
     
     # Format the card costs
     cost_items = []
@@ -338,6 +338,8 @@ def main():
                         help="Random seed for reproducible games")
     parser.add_argument("--verbose", action="store_true",
                         help="Print detailed game state information")
+    parser.add_argument("--rounds", type=int, default=100,
+                        help="Maximum number of rounds to play. Values < 1 mean unlimited rounds")
     
     args = parser.parse_args()
     
@@ -362,13 +364,22 @@ def main():
     
     # Main game loop
     current_player = 0
-    max_turns = 100  # Safety limit to prevent infinite loops
     turn_count = 0
+    round_number = 1
+    final_round = False
+    winning_player = None
     game_over = False
     
-    while not game_over and turn_count < max_turns:
+    # Track the starting player of the game (always Player 1 for now)
+    starting_player = 0
+    
+    # Determine max rounds (< 1 means unlimited)
+    unlimited_rounds = args.rounds < 1
+    max_rounds = None if unlimited_rounds else args.rounds
+    
+    while not game_over:
         turn_count += 1
-        print(f"\nTurn {turn_count} - Player {current_player + 1}'s turn ({agents[current_player].name})")
+        print(f"\nTurn {turn_count} - Round {round_number} - Player {current_player + 1}'s turn ({agents[current_player].name})")
         
         # Get action from current agent
         action = agents[current_player].take_turn(game_state, current_player)
@@ -391,16 +402,35 @@ def main():
         if not success:
             print(f"Invalid action from Player {current_player + 1}. Skipping turn.")
         
-        # Check if any player has reached 15 points
-        for i, player in enumerate(game_state.players):
-            points = game_state.calculate_player_points(i)
-            if points >= 15:
-                print(f"\nGame over! Player {i + 1} ({agents[i].name}) has won with {points} points!")
-                game_over = True
-                break
+        # Check if any player has reached the victory point threshold (only if we're not already in the final round)
+        # Official victory threshold is 15 points
+        VICTORY_POINTS = 15
+        if not final_round:
+            for i, player in enumerate(game_state.players):
+                points = game_state.calculate_player_points(i)
+                if points >= VICTORY_POINTS:
+                    print(f"\nPlayer {i + 1} ({agents[i].name}) has reached {points} points!")
+                    print(f"Final round triggered - all players will get one more turn.")
+                    final_round = True
+                    winning_player = i  # Track the first player to reach the victory point threshold
+                    break
         
         # Move to next player
         current_player = (current_player + 1) % args.players
+        
+        # If we've completed a round (all players have taken a turn), update round counter
+        if current_player == starting_player:
+            round_number += 1
+            
+            # If we're in the final round and have completed it, end the game
+            if final_round:
+                game_over = True
+                print(f"\nGame over! Round complete after player reached {VICTORY_POINTS}+ points.")
+                
+            # Check if we've hit the maximum round limit
+            if not unlimited_rounds and round_number > max_rounds:
+                game_over = True
+                print(f"\nGame over! Reached maximum round limit of {max_rounds} rounds.")
         
         # Print game state after the turn if verbose
         if args.verbose:
@@ -410,14 +440,33 @@ def main():
     print("\nFinal Game State:")
     print_game_state(game_state, verbose=True)
     
-    # Print final scores
+    # Print final scores and determine winner
     print("\nFinal Scores:")
+    highest_points = 0
+    winners = []
+    
     for i, player in enumerate(game_state.players):
         points = game_state.calculate_player_points(i)
         print(f"Player {i + 1} ({agents[i].name}): {points} points")
+        
+        # Track highest score and potential winners
+        if points > highest_points:
+            highest_points = points
+            winners = [i]
+        elif points == highest_points:
+            winners.append(i)
     
-    if turn_count >= max_turns:
-        print("\nGame ended due to reaching maximum turn limit.")
+    # Print the winner(s)
+    if len(winners) == 1:
+        winner_idx = winners[0]
+        print(f"\nPlayer {winner_idx + 1} ({agents[winner_idx].name}) wins with {highest_points} points!")
+    else:
+        # Handle ties
+        winner_str = ", ".join([f"Player {w + 1} ({agents[w].name})" for w in winners])
+        print(f"\nTie game! {winner_str} tied with {highest_points} points each!")
+    
+    if not unlimited_rounds and round_number > max_rounds:
+        print(f"\nGame ended due to reaching maximum round limit of {max_rounds} rounds.")
     
     # Close game logging
     game_logger.close()
