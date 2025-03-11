@@ -144,8 +144,8 @@ def main():
     print("\nFinal Game State:")
     print_game_state(game_state, agents=agents, verbose=True)
     
-    # Print final scores and determine winner
-    print_end_game_summary(game_state, agents)
+    # Print final scores and determine winner with efficiency stats
+    print_end_game_summary(game_state, agents, round_number)
     
     # Print round limit message if applicable
     if not unlimited_rounds and round_number > max_rounds:
