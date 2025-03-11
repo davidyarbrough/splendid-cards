@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.models.gamestate import GameState
-from src.common import Color, Token, Card, Tile, CardCost
+from src.utils.common import Color, Token, Card, Tile, CardCost
 
 class TestGameState(unittest.TestCase):
     """Test the GameState initialization with different seeds and player counts."""

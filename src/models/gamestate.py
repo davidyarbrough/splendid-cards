@@ -3,7 +3,7 @@ from enum import Enum
 import time
 import csv
 import os
-from src.common import Color, shuffleDecks, shuffleTiles
+from src.utils.common import Color, shuffleDecks, shuffleTiles
 
 class GameState:
     def __init__(self, players=4, seed=None):
@@ -248,13 +248,12 @@ class GameState:
         # In a real implementation, this would look up the tile's points from tiles.csv
         return 3  # All tiles are worth 3 points
     
-    def buy_card(self, player_index, card_index, level):
+    def buy_card(self, player_index, card_index):
         """Process a player buying a card.
         
         Args:
             player_index: Index of the player buying the card
             card_index: Index of the card to buy
-            level: Level of the river (1, 2, or 3) to buy from
             
         Returns:
             Boolean indicating success or failure
@@ -266,22 +265,26 @@ class GameState:
             
         player = self.players[player_index]
         
-        # Verify the card is in the river
-        if level == 1 and card_index in self.level1_river:
+        # Verify the card is in the river or reserved cards and determine the source
+        if card_index in self.level1_river:
             river = self.level1_river
             deck = self.level1_deck
-        elif level == 2 and card_index in self.level2_river:
+            level = 1
+        elif card_index in self.level2_river:
             river = self.level2_river
             deck = self.level2_deck
-        elif level == 3 and card_index in self.level3_river:
+            level = 2
+        elif card_index in self.level3_river:
             river = self.level3_river
             deck = self.level3_deck
+            level = 3
         elif card_index in player.reserved_cards:
             # Buying a reserved card
             river = player.reserved_cards
             deck = None  # No need to draw a replacement
+            level = None  # Not from a river level
         else:
-            print(f"Card {card_index} not found in level {level} river or reserved cards")
+            print(f"Card {card_index} not found in any river or reserved cards")
             return False
         
         # Check if player can afford the card

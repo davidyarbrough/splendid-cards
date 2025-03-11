@@ -50,7 +50,7 @@ def shuffleDecks(seed=None):
     # Read cards from CSV file
     # Calculate the project root directory and find cards.csv
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)  # Go up one level from src to project root
+    project_root = os.path.dirname(os.path.dirname(current_dir))  # Go up two levels from utils to project root
     csv_path = os.path.join(project_root, 'data', 'cards.csv')
     
     with open(csv_path, 'r') as file:
@@ -89,7 +89,7 @@ def shuffleTiles(seed=None):
     # Read tiles from CSV file
     # Calculate the project root directory and find tiles.csv
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)  # Go up one level from src to project root
+    project_root = os.path.dirname(os.path.dirname(current_dir))  # Go up two levels from utils to project root
     csv_path = os.path.join(project_root, 'data', 'tiles.csv')
     
     with open(csv_path, 'r') as file:

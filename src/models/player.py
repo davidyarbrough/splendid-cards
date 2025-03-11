@@ -1,4 +1,4 @@
-from src.common import Color
+from src.utils.common import Color
 
 class Player:
     def __init__(self, name=None):

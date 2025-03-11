@@ -2,7 +2,7 @@
 # the most expensive card it can afford next turn
 
 from src.agents.agent import Agent
-from src.common import Color
+from src.utils.common import Color
 
 class GreedyBuyer(Agent):
     """Agent that implements a greedy strategy - always buy the most expensive card that is affordable."""
