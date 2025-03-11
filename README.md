@@ -54,11 +54,33 @@ python src/main.py --agents all --games 1000 --report
 
 ## Agent Types
 
-- **Random**: Makes legal moves at random
-- **Stingy**: Buys the cheapest card that still gives points. If there are none, it will buy the cheapest card.
-- **Greedy**: Always buys the most expensive card it can afford
-- **Value-Based**: Evaluates moves based on a heuristic value function
-- **MCTS**: Uses Monte Carlo Tree Search to look ahead
+Use these names with the `--agents` parameter to specify which agents to use in your game:
+
+- **Greedy** (`greedy`): Always buys the most expensive card it can afford. This agent prioritizes cards with the highest total cost.
+
+- **Stingy** (`stingy`): Buys the cheapest card it can afford. This agent prioritizes cards with the lowest total cost, breaking ties by preferring cards with more diverse color requirements and higher points.
+
+- **Random** (`random`): Makes legal moves at random. (Not yet implemented)
+
+- **Value-Based** (`value`): Evaluates moves based on a heuristic value function. (Not yet implemented)
+
+- **MCTS** (`mcts`): Uses Monte Carlo Tree Search to look ahead. (Not yet implemented)
+
+### Examples
+
+```bash
+# Use all GreedyBuyer agents
+python src/main.py --agents greedy
+
+# Use all StingyBuyer agents
+python src/main.py --agents stingy
+
+# Specify different agents for each player (in a 4-player game)
+python src/main.py --agents greedy stingy greedy stingy
+
+# For a 2-player game with specific agents
+python src/main.py --players 2 --agents greedy stingy
+```
 - **Custom**: Define your own agent strategies
 
 ## Development

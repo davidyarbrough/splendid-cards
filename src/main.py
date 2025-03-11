@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from src.models.gamestate import GameState
 from src.agents.greedy_buyer import GreedyBuyer
+from src.agents.stingy_buyer import StingyBuyer
 from src.utils.common import Color
 
 # Import refactored modules
@@ -23,6 +24,8 @@ def main():
     parser = argparse.ArgumentParser(description="Splendid Cards Game Simulation")
     parser.add_argument("--players", type=int, default=4, choices=[2, 3, 4],
                         help="Number of players in the game (2-4)")
+    parser.add_argument("--agents", type=str, nargs="*", default=["greedy"],
+                        help="Agent types to use (greedy, stingy)")
     parser.add_argument("--seed", type=int, default=None,
                         help="Random seed for reproducible games")
     parser.add_argument("--verbose", action="store_true",
@@ -39,8 +42,30 @@ def main():
     # Initialize the game state
     game_state = GameState(players=args.players, seed=args.seed)
     
-    # Create agents (all GreedyBuyer for now)
-    agents = [GreedyBuyer(f"GreedyBuyer-{i+1}") for i in range(args.players)]
+    # Map agent type names to agent classes
+    agent_types = {
+        "greedy": GreedyBuyer,
+        "stingy": StingyBuyer,
+    }
+    
+    # Create agents based on specified types
+    agents = []
+    agent_names = args.agents[:] if len(args.agents) >= args.players else [args.agents[0]] * args.players
+    
+    # Ensure we have enough agent types (repeat the last one if needed)
+    while len(agent_names) < args.players:
+        agent_names.append(agent_names[-1])
+    
+    # Create the agent instances
+    for i in range(args.players):
+        agent_type = agent_names[i].lower()
+        if agent_type not in agent_types:
+            print(f"Warning: Unknown agent type '{agent_type}'. Using 'greedy' instead.")
+            agent_type = "greedy"
+        
+        agent_class = agent_types[agent_type]
+        agent_name = f"{agent_class.__name__}-{i+1}"
+        agents.append(agent_class(agent_name))
     
     # Print initial game state
     if args.verbose:

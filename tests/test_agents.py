@@ -9,8 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from src.agents.agent import Agent
 from src.agents.greedy_buyer import GreedyBuyer
 # RandomAgent is not yet implemented
-# StingyBuyer is not yet implemented
-# from src.agents.stingy_buyer import StingyBuyer
+from src.agents.stingy_buyer import StingyBuyer
 from src.utils.common import Color
 
 
@@ -79,7 +78,48 @@ class TestAgent(unittest.TestCase):
     
     # Note: RandomAgent test removed as this class is not yet implemented
     
-    # StingyBuyer test removed as this class is not yet implemented
+    def test_stingy_buyer_agent(self):
+        """Test the StingyBuyer agent implementation."""
+        # Create a mock game state
+        game_state = MagicMock()
+        
+        # Set up a mock player
+        player = MagicMock()
+        player.tokens = {
+            Color.WHITE: 3,
+            Color.BLUE: 2,
+            Color.BLACK: 1,
+            Color.RED: 0,
+            Color.GREEN: 0,
+            Color.GOLD: 0
+        }
+        game_state.players = [player]
+        
+        # Mock available cards with different costs
+        # Card 101: High cost (3 white) - 2 points
+        # Card 102: Medium cost (2 white, 2 blue) - 1 point
+        # Card 103: Low cost (1 white, 1 blue, 1 black) - 3 points
+        game_state.get_card_cost.side_effect = lambda card_idx: {
+            101: {Color.WHITE: 3, Color.BLUE: 0, Color.BLACK: 0, Color.RED: 0, Color.GREEN: 0},
+            102: {Color.WHITE: 2, Color.BLUE: 2, Color.BLACK: 0, Color.RED: 0, Color.GREEN: 0},
+            103: {Color.WHITE: 1, Color.BLUE: 1, Color.BLACK: 1, Color.RED: 0, Color.GREEN: 0}
+        }[card_idx]
+        
+        game_state.get_card_points.side_effect = lambda card_idx: {101: 2, 102: 1, 103: 3}[card_idx]
+        game_state.get_card_color.side_effect = lambda card_idx: {101: Color.WHITE, 102: Color.BLUE, 103: Color.BLACK}[card_idx]
+        
+        # Set up card levels in rivers
+        game_state.level1_river = [101]
+        game_state.level2_river = [102]
+        game_state.level3_river = [103]
+        
+        # Create agent and get action
+        agent = StingyBuyer()
+        action = agent.take_turn(game_state, 0)
+        
+        # StingyBuyer should try to buy the cheapest card it can afford
+        self.assertEqual(action["action"], "buy")
+        self.assertEqual(action["card_index"], 103)  # Card 103 has the lowest total cost of 3
 
 
 if __name__ == '__main__':
