@@ -64,6 +64,18 @@ def execute_action(game_state, player_idx, action):
             print(f"Player {player_idx + 1} reserves card {card_idx} from {level_str}{gold_str}")
             return True
             
+        elif action_type == "claim_tile":
+            # Claim tile action
+            tile_idx = action.get("tile_index")
+            success = game_state.claim_tile(player_idx, tile_idx)
+            
+            if success:
+                print(f"Player {player_idx + 1} claims tile {tile_idx}")
+                return True
+            else:
+                print(f"Player {player_idx + 1} failed to claim tile {tile_idx}")
+                return False
+            
         else:
             print(f"Unknown action type: {action_type}")
             return False

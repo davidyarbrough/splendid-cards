@@ -50,16 +50,16 @@ def print_game_state(game_state, current_player=None, agents=None, verbose=False
     
     # Print player info
     print("\nPlayers:\n")
-    for i, player in enumerate(game_state.players):
+    for player_idx, player in enumerate(game_state.players):
         # Determine if this is the current player
-        is_current = (i == current_player)
-        player_name = f" ({agents[i].name})" if agents and i < len(agents) else ""
+        is_current = (player_idx == current_player)
+        player_name = f" ({agents[player_idx].name})" if agents and player_idx < len(agents) else ""
         
         # Print player header with optional current marker
         if is_current:
-            print(f"Player {i + 1}{player_name} (Current Turn)")
+            print(f"Player {player_idx + 1}{player_name} (Current Turn)")
         else:
-            print(f"Player {i + 1}{player_name}")
+            print(f"Player {player_idx + 1}{player_name}")
         
         # Print player tokens
         token_strs = []
@@ -75,20 +75,43 @@ def print_game_state(game_state, current_player=None, agents=None, verbose=False
         else:
             print("Tokens: ")
         
+        # Print player's owned tiles if they have any
+        if hasattr(player, 'tiles') and player.tiles:
+            print("Owned tiles:")
+            tile_strs = []
+            for tile_idx in player.tiles:
+                tile_strs.append(str(tile_idx))
+            print("  " + ", ".join(tile_strs))
+            
         # Print player's owned cards
         print("Owned cards:")
         if not any(len(cards) > 0 for cards in player.cards.values()):
             print("  None")
         else:
             # Cards are already grouped by color in the player object
-            cards_by_color = player.cards
-            
-            # Print cards grouped by color
-            for color, cards in cards_by_color.items():
+            # Print cards grouped by color in a format similar to river cards
+            for color, cards in player.cards.items():
                 if len(cards) > 0:  # Only print colors that have cards
                     color_code = Colors.get_color_code(color)
                     color_name = color.value.upper()
-                    print(f"  {color_code}{color_name}{Colors.RESET}: {len(cards)}")
+                    print(f"  {color_code}{color_name}{Colors.RESET}:")
+                    
+                    # Print cards in rows of 3
+                    row = []
+                    for card_index, card_idx in enumerate(cards):
+                        row.append(card_idx)
+                        if (card_index + 1) % 3 == 0 or card_index == len(cards) - 1:
+                            card_strs = []
+                            for c in row:
+                                # Pad card indexes < 10 with a space
+                                padded_idx = f" {c}" if c < 10 else f"{c}"
+                                points = game_state.get_card_points(c)
+                                color_code = Colors.get_color_code(color)
+                                color_str = color.value.upper()
+                                # Apply color highlighting to the color name
+                                card_strs.append(f"| {padded_idx} {color_code}{color_str}{Colors.RESET} {points} |")
+                            print("    " + "  ".join(card_strs))
+                            row = []
         
         # Print player's reserved cards
         if player.reserved_cards:
@@ -97,7 +120,7 @@ def print_game_state(game_state, current_player=None, agents=None, verbose=False
                 print_card_details(game_state, card_idx, verbose)
         
         # Print player points
-        points = game_state.calculate_player_points(i)
+        points = game_state.calculate_player_points(player_idx)
         print(f"Points: {points}\n")
 
 
