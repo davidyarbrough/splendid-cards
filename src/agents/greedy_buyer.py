@@ -22,6 +22,30 @@ class GreedyBuyer(Agent):
         """
         player = game_state.players[player_index]
         
+        # First, check if player is eligible for any tiles
+        eligible_tiles = game_state._check_tile_eligibility(player_index)
+        if eligible_tiles:
+            # Pick the tile with the highest combined cost (greedy strategy)
+            # In case of a tie, pick the one with the lowest index
+            best_tile = None
+            highest_cost = -1
+            
+            for tile_idx in eligible_tiles:
+                tile_cost = game_state.get_tile_cost(tile_idx)
+                total_cost = sum(tile_cost.values())
+                
+                if total_cost > highest_cost or (total_cost == highest_cost and tile_idx < best_tile):
+                    highest_cost = total_cost
+                    best_tile = tile_idx
+            
+            # Claim the selected tile
+            if best_tile is not None:
+                game_state.claim_tile(player_index, best_tile)
+                return {
+                    "action": "claim_tile",
+                    "tile_index": best_tile
+                }
+        
         # Try to buy the most expensive card possible
         purchase_action = self._try_buy_most_expensive_card(game_state, player)
         if purchase_action:

@@ -244,9 +244,41 @@ class GameState:
         Returns:
             Integer representing the tile's prestige points
         """
-        # This is a placeholder implementation
-        # In a real implementation, this would look up the tile's points from tiles.csv
-        return 3  # All tiles are worth 3 points
+        # All tiles are worth 3 points as per the CSV file
+        return 3
+        
+    def get_tile_cost(self, tile_idx):
+        """Get the cost of a tile by its index.
+        
+        Args:
+            tile_idx: Index of the tile
+            
+        Returns:
+            Dictionary of {Color: count} representing the required number of cards of each color
+        """
+        # Calculate the project root directory and find tiles.csv
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(current_dir))  # Go up two levels from models to project root
+        csv_path = os.path.join(project_root, 'data', 'tiles.csv')
+        
+        # Read the tile data
+        with open(csv_path, 'r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if int(row['index']) == tile_idx:
+                    # Map the color keys to the corresponding Color enum
+                    cost = {}
+                    for color_name in ['wht', 'blu', 'grn', 'red', 'blk']:
+                        color_value = int(row[color_name])
+                        if color_value > 0:
+                            for color in Color:
+                                if color.value == color_name:
+                                    cost[color] = color_value
+                                    break
+                    return cost
+        
+        # If tile not found, return empty cost
+        return {}
     
     def buy_card(self, player_index, card_index):
         """Process a player buying a card.
@@ -467,9 +499,65 @@ class GameState:
             player_index: Index of the player to check
             
         Returns:
-            None
+            List of eligible tile indices or an empty list if none are eligible
         """
-        # This is a placeholder implementation
-        # In a real implementation, this would check the tile requirements
-        # and award tiles when conditions are met
-        pass
+        if player_index < 0 or player_index >= len(self.players):
+            return []
+        
+        player = self.players[player_index]
+        eligible_tiles = []
+        
+        # Check each available tile
+        for tile_idx in self.available_tiles:
+            tile_cost = self.get_tile_cost(tile_idx)
+            is_eligible = True
+            
+            # Check if player has enough cards of each required color
+            for color, required_count in tile_cost.items():
+                if len(player.cards.get(color, [])) < required_count:
+                    is_eligible = False
+                    break
+            
+            if is_eligible:
+                eligible_tiles.append(tile_idx)
+        
+        return eligible_tiles
+        
+    def claim_tile(self, player_index, tile_idx):
+        """Claim a tile for a player.
+        
+        Args:
+            player_index: Index of the player claiming the tile
+            tile_idx: Index of the tile to claim
+            
+        Returns:
+            Boolean indicating success or failure
+        """
+        if player_index < 0 or player_index >= len(self.players):
+            print(f"Invalid player index: {player_index}")
+            return False
+            
+        if tile_idx not in self.available_tiles:
+            print(f"Tile {tile_idx} is not available")
+            return False
+            
+        # Check if player is eligible for this tile
+        player = self.players[player_index]
+        tile_cost = self.get_tile_cost(tile_idx)
+        is_eligible = True
+        
+        # Check if player has enough cards of each required color
+        for color, required_count in tile_cost.items():
+            if len(player.cards.get(color, [])) < required_count:
+                is_eligible = False
+                print(f"Player {player_index + 1} does not have enough {color.name} cards for tile {tile_idx}")
+                break
+                
+        if not is_eligible:
+            return False
+            
+        # Remove the tile from available tiles and add to player's tiles
+        self.available_tiles.remove(tile_idx)
+        player.tiles.append(tile_idx)
+        print(f"Player {player_index + 1} claims tile {tile_idx}")
+        return True

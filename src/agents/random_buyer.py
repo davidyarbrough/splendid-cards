@@ -32,6 +32,19 @@ class RandomBuyer(Agent):
         """
         player = game_state.players[player_index]
         
+        # First, check if player is eligible for any tiles
+        eligible_tiles = game_state._check_tile_eligibility(player_index)
+        if eligible_tiles:
+            # Pick a random tile from eligible tiles (random strategy)
+            random_tile = random.choice(eligible_tiles)
+            
+            # Claim the selected tile
+            game_state.claim_tile(player_index, random_tile)
+            return {
+                "action": "claim_tile",
+                "tile_index": random_tile
+            }
+        
         # Try to buy a random available card
         purchase_action = self._try_buy_random_card(game_state, player)
         if purchase_action:

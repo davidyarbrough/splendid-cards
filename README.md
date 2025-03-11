@@ -14,6 +14,7 @@ In this *jewel* of a tableau-building game, players:
 - Purchase development cards using these tokens
 - Earn prestige points from cards and tiles
 - Build an economic engine through card discounts
+- Claim tiles by meeting color requirements with owned cards
 - Race to be the first to reach 15 prestige points
 
 The simulation faithfully recreates the elegant balance of resource management, strategic planning, and tactical decision-making that makes the original game a *gem* among tabletop enthusiasts.
@@ -56,11 +57,11 @@ python3 src/main.py --agents all --games 1000 --report
 
 Use these names with the `--agents` parameter to specify which agents to use in your game:
 
-- **Greedy** (`greedy`): Always buys the most expensive card it can afford. This agent prioritizes cards with the highest total cost.
+- **Greedy** (`greedy`): Always buys the most expensive card it can afford. This agent prioritizes cards with the highest total cost. When eligible for tiles, it selects the tile with the highest combined card requirement cost.
 
-- **Stingy** (`stingy`): Buys the cheapest card it can afford. This agent prioritizes cards with the lowest total cost, breaking ties by preferring cards with more diverse color requirements and higher points.
+- **Stingy** (`stingy`): Buys the cheapest card it can afford. This agent prioritizes cards with the lowest total cost, breaking ties by preferring cards with more diverse color requirements and higher points. When eligible for tiles, it selects the tile with the lowest combined card requirement cost.
 
-- **Random** (`random`): Makes random decisions from available legal moves. If any cards can be purchased immediately, it randomly selects one to buy. Otherwise, it takes 3 tokens of randomly selected colors (never GOLD tokens).
+- **Random** (`random`): Makes random decisions from available legal moves. If any cards can be purchased immediately, it randomly selects one to buy. Otherwise, it takes 3 tokens of randomly selected colors (never GOLD tokens). When eligible for tiles, it randomly selects one of the available qualifying tiles.
 
 - **Value-Based** (`value`): Evaluates moves based on a heuristic value function. (Not yet implemented)
 
