@@ -56,9 +56,10 @@ def execute_action(game_state, player_idx, action):
         elif action_type == "reserve":
             # Reserve card action
             card_idx = action.get("card_index")
-            gold_taken = game_state.reserve_card(player_idx, card_idx)
+            level = action.get("level", 1)  # Default to level 1 if not specified
+            gold_taken = game_state.reserve_card(player_idx, card_idx, level)
             
-            level_str = f"level {action.get('level', 1)}"
+            level_str = f"level {level}"
             gold_str = " and took a gold token" if gold_taken else ""
             
             print(f"Player {player_idx + 1} reserves card {card_idx} from {level_str}{gold_str}")

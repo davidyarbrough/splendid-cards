@@ -11,6 +11,7 @@ from src.models.gamestate import GameState
 from src.agents.greedy_buyer import GreedyBuyer
 from src.agents.random_buyer import RandomBuyer
 from src.agents.stingy_buyer import StingyBuyer
+from src.agents.value_buyer import ValueBuyer
 from src.utils.common import Color
 
 # Import refactored modules
@@ -48,6 +49,7 @@ def main():
         "greedy": GreedyBuyer,
         "random": RandomBuyer,
         "stingy": StingyBuyer,
+        "value": ValueBuyer,
     }
     
     # Create agents based on specified types
